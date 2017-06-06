@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:slack="http://www.mulesoft.org/schema/mule/slack"
+
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+              http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+               http://www.mulesoft.org/schema/mule/slack http://www.mulesoft.org/schema/mule/slack/current/mule-slack.xsd">
+
+    <slack:config name="slack-config">
+        <slack:connection token="xoxp-2228798738-2637927129-63033060723-2339da2e86"/>
+    </slack:config>
+
+    <flow name="postMessage">
+        <slack:post-message channel="G03GX5CHC" config-ref="slack-config">
+            <slack:message>
+                This is a message
+            </slack:message>
+        </slack:post-message>
+        <logger message="#[payload]" level="ERROR"/>
+    </flow>
+
+    <flow name="listChannels">
+        <slack:list-channels config-ref="slack-config">
+            <repeatable-in-memory-stream initialBufferSize="10" bufferSizeIncrement="5" maxBufferSize="20000" bufferUnit="KB"/>
+        </slack:list-channels>
+        <logger message="#[payload]" level="ERROR"/>
+    </flow>
+</mule>
