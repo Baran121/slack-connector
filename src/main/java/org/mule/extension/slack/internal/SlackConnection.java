@@ -1,14 +1,13 @@
 package org.mule.extension.slack.internal;
 
 import static java.lang.String.valueOf;
+import org.mule.runtime.api.util.MultiMap;
 import org.mule.runtime.core.api.util.IOUtils;
 import org.mule.runtime.extension.api.annotation.param.Content;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.http.api.HttpService;
 import org.mule.runtime.http.api.client.HttpClient;
 import org.mule.runtime.http.api.client.HttpClientConfiguration;
-import org.mule.runtime.http.api.domain.ParameterMap;
-import org.mule.runtime.http.api.domain.entity.InputStreamHttpEntity;
 import org.mule.runtime.http.api.domain.message.request.HttpRequest;
 import org.mule.runtime.http.api.domain.message.response.HttpResponse;
 
@@ -37,7 +36,7 @@ public class SlackConnection {
                                    @Content @Optional InputStream attachments,
                                    @Optional String username,
                                    @Optional(defaultValue = "false") boolean asUser) throws IOException, TimeoutException {
-        ParameterMap parameterMap = new ParameterMap();
+        MultiMap<String, String>  parameterMap = new MultiMap();
         parameterMap.put("channel", channel);
         parameterMap.put("text", message);
         ifPresent(attachments, att -> parameterMap.put("attachments", IOUtils.toString(att)));
@@ -47,10 +46,10 @@ public class SlackConnection {
     }
 
     public InputStream listChannels() throws IOException, TimeoutException {
-        return sendRequest("https://slack.com/api/channels.list", new ParameterMap());
+        return sendRequest("https://slack.com/api/channels.list", new MultiMap<>());
     }
 
-    private InputStream sendRequest(String uri, ParameterMap parameterMap) throws IOException, TimeoutException {
+    private InputStream sendRequest(String uri, MultiMap<String, String> parameterMap) throws IOException, TimeoutException {
         parameterMap.put("token", token);
 
         HttpResponse send = httpClient.send(HttpRequest.builder()
@@ -59,7 +58,7 @@ public class SlackConnection {
                 .setQueryParams(parameterMap)
                 .build(), 5000, true, null);
 
-        return ((InputStreamHttpEntity) send.getEntity()).getInputStream();
+        return send.getEntity().getContent();
     }
 
     private <T> void ifPresent(T value, Consumer<T> consumer){
